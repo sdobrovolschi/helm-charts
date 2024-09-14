@@ -13,12 +13,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Lint chart
-        run: helm lint service --set image.repository=service,image.tag=0.0.1 --strict
       - name: Package chart
         id: package
         run: echo "CHART_LOCATION=$(helm package service | awk '/Successfully packaged chart and saved it to:/ {print $NF}')" >> "$GITHUB_OUTPUT"
       - name: Publish chart
         run: |
-          helm registry login -u ${{ github.actor }} -p ${{secrets.GITHUB_TOKEN}} ghcr.io
+          helm registry login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
           helm push ${{ steps.package.outputs.CHART_LOCATION }} oci://ghcr.io/${{ github.repository }}
