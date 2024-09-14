@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "service.name" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "service.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "service.name" . }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.container.imagePullPolicy }}
+           {{- with .Values.container.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+           {{- end }}
+           {{- with .Values.env }}
+          env:
+            {{- include "service.env" (dict "env" .) | indent 12 }}
+           {{- end }}
+           {{- with .Values.container.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+           {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.container.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.container.readinessProbe | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.container.securityContext | nindent 12 }}
+      restartPolicy: {{ .Values.pod.restartPolicy }}
+       {{- with .Values.pod.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+       {{- end }}
+      securityContext:
+        {{- toYaml .Values.pod.securityContext | nindent 8 }}
+  replicas: {{ .Values.deployment.replicas }}
+  strategy:
+   {{- toYaml .Values.deployment.strategy | nindent 4 }}

@@ -1,0 +1,18 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+   {{- include "service.labels" . | nindent 4 }}
+   {{- with .Values.ingress.annotations }}
+  annotations:
+   {{- toYaml . | nindent 4 }}
+   {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+   {{- with .Values.ingress.hosts }}
+  rules:
+    {{- include "ingress.hosts" (dict "hosts" .) | indent 4 }}
+   {{- end }}
+{{- end }}
