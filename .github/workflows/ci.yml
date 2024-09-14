@@ -1,15 +1,17 @@
 name: build
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
 
 jobs:
   build:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -18,6 +20,12 @@ jobs:
       - name: Package chart
         id: package
         run: echo "CHART_LOCATION=$(helm package service | awk '/Successfully packaged chart and saved it to:/ {print $NF}')" >> "$GITHUB_OUTPUT"
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
       - name: Publish chart
         run: |
           helm registry login -u ${{ github.actor }} -p ${{secrets.GITHUB_TOKEN}} ghcr.io
