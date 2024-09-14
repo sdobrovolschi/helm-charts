@@ -1,0 +1,32 @@
+name: checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  checks:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository head
+        uses: actions/checkout@v4
+      - name: Lint chart
+        run: helm lint service --set name=service,partOf=system,image.repository=service,image.tag=0.0.1 --strict
+      - name: Render templates head
+        run: helm template service service --set name=service,partOf=system,image.repository=service,image.tag=0.0.1 --output-dir head
+      - name: Check out repository base
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          ref: ${{ github.base_ref }}
+      - name: Render templates base
+        run: helm template service service --set name=service,partOf=system,image.repository=service,image.tag=0.0.1 --output-dir base
+      - name: Comment diff
+        uses: int128/diff-action@v1
+        with:
+          base: ${{ github.workspace }}/base
+          head: ${{ github.workspace }}/head
+          comment-body-no-diff: No diff of helm build
