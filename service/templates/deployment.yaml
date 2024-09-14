@@ -1,0 +1,50 @@
+{{- $ReleaseName := .Release.Name -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "service.fullname" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "service.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.deployment.replicas }}
+  strategy:
+{{ toYaml .Values.deployment.strategy | indent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ template "service.fullname" . }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: IfNotPresent
+          ports:
+{{ toYaml .Values.container.ports | indent 12 }}
+          env:
+          {{- range $key, $value := .Values.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.container.resources | indent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sleep", "20" ]
+          livenessProbe:
+{{ toYaml .Values.container.livenessProbe | indent 12 }}
+          readinessProbe:
+{{ toYaml .Values.container.readinessProbe | indent 12 }}
+          securityContext:
+{{ toYaml .Values.container.securityContext | indent 12 }}
+      imagePullSecrets:
+        - name: {{ .Values.pod.imagePullSecrets }}
+      schedulerName: default-scheduler
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.pod.terminationGracePeriodSeconds }}
+      dnsPolicy: ClusterFirst
+      securityContext:
+{{ toYaml .Values.pod.securityContext | indent 8 }}
