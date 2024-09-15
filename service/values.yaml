@@ -1,11 +1,14 @@
 service:
-  type: ClusterIP
-  port: 8081
+  enabled: false
   ports:
-    - port: 8081
+    - port: 8080
       targetPort: 8080
       protocol: TCP
       name: service
+    - port: 8081
+      targetPort: 8081
+      protocol: TCP
+      name: metrics
 
 deployment:
   replicas: 1
@@ -16,7 +19,7 @@ deployment:
       maxUnavailable: 0
 
 pod:
-  imagePullSecrets: regcred
+  restartPolicy: Always
   securityContext:
     runAsNonRoot: true
     runAsUser: 10001
@@ -24,6 +27,7 @@ pod:
     fsGroup: 10001
 
 container:
+  imagePullPolicy: IfNotPresent
   ports:
     - name: service
       containerPort: 8080
@@ -35,9 +39,16 @@ container:
     httpGet:
       path: /readyz
       port: service
+  securityContext:
+    allowPrivilegeEscalation: false
 
 ingress:
-  ingressClassName: nginx
+  enabled: false
   annotations:
-    cert-manager.io/cluster-issuer: acme-prod
     nginx.ingress.kubernetes.io/service-upstream: "true"
+  ingressClassName: nginx
+  hosts:
+    - host: service.local
+      paths:
+        - path: /
+          pathType: Prefix
