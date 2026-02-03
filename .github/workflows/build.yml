@@ -17,11 +17,11 @@ jobs:
         run: |
           helm repo add postgresql https://charts.bitnami.com/bitnami
           helm repo add clickhouse https://charts.bitnami.com/bitnami
-          cd dittofeed
-          helm dependency update
+#          cd dittofeed
+#          helm dependency update
       - name: Package chart
         id: package
-        run: echo "CHART_LOCATION=$(helm package dittofeed | awk '/Successfully packaged chart and saved it to:/ {print $NF}')" >> "$GITHUB_OUTPUT"
+        run: echo "CHART_LOCATION=$(helm package rudderstack | awk '/Successfully packaged chart and saved it to:/ {print $NF}')" >> "$GITHUB_OUTPUT"
       - name: Publish chart
         run: |
           helm registry login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
